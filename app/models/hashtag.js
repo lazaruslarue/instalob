@@ -7,7 +7,8 @@ var HashtagSchema = new Schema({
   Owner: {
     type: mongoose.Schema.ObjectId,
     ref: 'User', 
-    unique: true
+    unique: true,
+    sparse: true
   }, 
   Recipients: [{
     type: mongoose.Schema.ObjectId,
@@ -21,20 +22,22 @@ HashtagSchema.set('toObject', { getters: true });
 //   // return Owner's Hashtags 
 // }
 
-HashtagSchema.statics.createNew = function(obj){ //TODO: currently creates duplicate hashes
+HashtagSchema.statics.createNew = function(useridAndTagname){ //TODO: currently creates duplicate hashes
   var defer = Q.defer();
   var User = mongoose.model('User');
   var Hashtag = mongoose.model('Hashtag');
-  var newhash = new Hashtag({'Hashtag': obj.tagName});
-  newhash.save();
-  User.findOne({'instagram.id': obj.userid})
+  var newhash = new Hashtag({'Hashtag': useridAndTagname.tagName});
+  User.findOne({'_id': useridAndTagname.userid})
   .populate('Hashtags', 'Hashtag')
-  .exec( function(err, User){
+  .exec( function(err, owner){
     if (err) defer.reject(err);
-    if (User) {
-      User.Hashtags.addToSet(newhash);
-      User.save(); // TODO: this is ugly... should be fixed, i think.
-      defer.resolve(User.Hashtags);
+    if (owner) {
+      owner.Hashtags.addToSet(newhash);
+      console.log('newhahs don: ',newhash)
+      newhash.Owner = owner;
+      newhash.save();
+      owner.save(); // TODO: this is ugly... should be fixed, i think.
+      defer.resolve(owner.Hashtags);
     }
   });
   return defer.promise;

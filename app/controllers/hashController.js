@@ -15,10 +15,10 @@ module.exports = {
     });
   },
   newTag: function(req, res){
-    if (process.env.NODE_ENV === 'local') req.user = {id:'5308efe226bfdc6d1afbc770'}; // for testing
+    if (process.env.NODE_ENV === 'local') req.user = {_id:'5308efe226bfdc6d1afbc770'}; // for testing
     // make hashtag for owner
     var obj = {
-      userid   : req.user.id,
+      userid   : req.user._id,
       tagName  : req.params.tagName
     };
     Hash.createNew(obj)
