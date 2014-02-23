@@ -33,9 +33,11 @@ HashtagSchema.statics.createNew = function(useridAndTagname){ //TODO: currently 
     if (err) defer.reject(err);
     if (owner) {
       owner.Hashtags.addToSet(newhash);
-      console.log('newhahs don: ',newhash)
+      console.log('newhash done: ',newhash);
       newhash.Owner = owner;
-      newhash.save();
+      newhash.save(function() {
+        console.log('arguments in newhash.save',arguments);
+      });
       owner.save(); // TODO: this is ugly... should be fixed, i think.
       defer.resolve(owner.Hashtags);
     }
@@ -56,7 +58,7 @@ HashtagSchema.statics.addRecipient = function(data){
   Hashtag.findOne({'_id': hashid })
     .populate('Recipients', 'Recipient')
     .exec(function(err, hashtag){
-      // console.log(' recipient object after addtoset ',hashtag.Recipients);
+      console.log(' args in addRecipient ', arguments);
 
       if (err) defer.reject(err);
       if (hashtag) hashtag.Recipients.addToSet(recipient);

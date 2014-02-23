@@ -8,14 +8,14 @@ var RecipientSchema = new Schema({
   LastName: String,
   Email: String,
   Completed: Boolean,
-  Home: {
-    address_line1: String,
-    address_line2: String,
-    address_city: String,
-    address_state: String,
-    address_zip: String,
-    address_country: String
-  }, 
+
+  address_line1: String,
+  address_line2: String,
+  address_city: String,
+  address_state: String,
+  address_zip: String,
+  address_country: String,
+
   Owner: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
@@ -24,5 +24,8 @@ var RecipientSchema = new Schema({
 });
 
 RecipientSchema.set('toObject', { getters: true });
+
+
+
 
 module.exports = mongoose.model('Recipient', RecipientSchema);

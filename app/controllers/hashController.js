@@ -21,26 +21,30 @@ module.exports = {
       userid   : req.user._id,
       tagName  : req.params.tagName
     };
-    Hash.createNew(obj)
-    .then(function (result){
-      res.send(result);
+    User.findOne({_id: obj.userid})
+    .exec(function(err, owner){
+      obj.owner = owner;
+      Hash.createNew(obj)
+      .then(function (result){
+        res.send(result);
+      });
     });
   },
   recipientResponse: function(req, res) {
     
     res.send('thanks for subscribing, keep an eye on your PO Box');
   },
-  addRecipient: function(req, res) {
-    
-    var recipient = new Recipient(req.body.recipientObject);
+  addRecipientToHashtag: function(req, res) {
+    if (process.env.NODE_ENV === 'local') req.user = {_id:'5308efe226bfdc6d1afbc770'}; // for testing
+    console.log(req.body);
+    var recipient = new Recipient(req.body);
+    recipient.beOwnedByUserId(req._id)
     recipient.save();
     var obj = {
-      ownerid         : req.userid,
+      ownerid         : req._id ,
       hashid          : req.body.hashid,
       recipientObject : recipient,
-      // update          : 'add'   
     };
-    console.log('addrecipient obj', obj)
     addNewRecipient(obj); // todo: down below
     res.send('finish add');
   },
@@ -66,16 +70,16 @@ module.exports = {
 
 var addNewRecipient = function(obj){
   // add recipient to hashtag from the form
-  console.log('addnewrecipient obj', obj)
+  console.log('addnewrecipient obj', obj);
 
   Hash.findHashTagsRecipients(obj)
   .then(Hash.addRecipient)
   // .then()
   // .findHashTagsRecipients()
-  .then(function(resolvedgoeshere) {
-    console.log('arguments after hash.addRecipient',arguments);
-    // result.hashArray.addToSet(obj.recipientObject);
-    // result.hashArray.save();
+  .then(function() {
+    console.log('arguments resolved from hash.addRecipient in addNewRecipient',arguments);
+    result.hashArray.addToSet(obj.recipientObject);
+    result.hashArray.save();
     console.log(result.hashArray);
   })
   .fail(function(err) {
