@@ -1,5 +1,7 @@
 var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+var Schema = mongoose.Schema,
+    Q      = require('q');
+
 
 var RecipientSchema = new Schema({
   FirstName: String,
@@ -16,7 +18,8 @@ var RecipientSchema = new Schema({
   }, 
   Owner: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    unique: true
   }
 });
 

@@ -6,7 +6,8 @@ var HashtagSchema = new Schema({
   Hashtag: String, 
   Owner: {
     type: mongoose.Schema.ObjectId,
-    ref: 'User'
+    ref: 'User', 
+    unique: true
   }, 
   Recipients: [{
     type: mongoose.Schema.ObjectId,
@@ -20,7 +21,7 @@ HashtagSchema.set('toObject', { getters: true });
 //   // return Owner's Hashtags 
 // }
 
-HashtagSchema.statics.createNew = function(obj){
+HashtagSchema.statics.createNew = function(obj){ //TODO: currently creates duplicate hashes
   var defer = Q.defer();
   var User = mongoose.model('User');
   var Hashtag = mongoose.model('Hashtag');
@@ -39,35 +40,54 @@ HashtagSchema.statics.createNew = function(obj){
   return defer.promise;
 };
 
-HashtagSchema.method.addRecipient = function(owner, recipientObject){
-  var defer   = Q.defer();  
-  var Hashtag = mongoose.model('Hashtag');
-  var Owner   = mongoose.model('Owner').findOne({'Owner': Owner });
-  Hashtag.findOne({'Owner': Owner })
-    .exec(function(err, hash){
-    if (err) defer.reject(err);
-    if (recipients) hash.Recipients.push(recipientObject);
-  });
-  console.log('HashtagSchema test log:' ,this);
-  return defer.promise;
-};
+HashtagSchema.statics.addRecipient = function(data){
+  console.log('data in hash.addRecipient method: ',data.data);
 
-// will search a User's hashtags 
-HashtagSchema.method.recipientArray = function(){
-  var defer = Q.defer();  
-  var Hashtag = mongoose.model('Hashtag');
-  Hashtag.findOne({'Hashtag': this.Hashtag })
-    .populate('Recipients')
-    .exec(function(err, recipients){
+  var defer     = Q.defer(),
+      Hashtag   = mongoose.model('Hashtag'),
+      User      = mongoose.model('User'),
+      Recipient = mongoose.model('Recipient'),
+      ownerid   = data.data.ownerid,
+      hashid    = data.data.hashid,
+      recipient = data.data.recipientObject;
+  Hashtag.findOne({'_id': hashid })
+    .populate('Recipients', 'Recipient')
+    .exec(function(err, hashtag){
+      // console.log(' recipient object after addtoset ',hashtag.Recipients);
+
       if (err) defer.reject(err);
-      if (recipients) defer.resolve(recipients);
-    });
-  console.log('HashtagSchema test log:' ,this);
+      if (hashtag) hashtag.Recipients.addToSet(recipient);
+      hashtag.save();
+      obj = {
+        data: data.data,
+        updatedArray : hashtag.Recipients
+      };
+      defer.resolve(obj);
+      console.log(' recipient object after addtoset ',hashtag.Recipients);
+  });
   return defer.promise;
 };
-HashtagSchema.method.recipientArray = function(){
+
+// will return a Hashtag's recipientArray 
+HashtagSchema.statics.findHashTagsRecipients = function(data){
+  var defer = Q.defer();
+  var Hashtag = mongoose.model('Hashtag');
+      console.log('before id: ' ,data);
+
+  var id = data.hashid;
+  Hashtag.findOne({'_id': id})
+    .populate('Recipients', 'Recipient')
+    .exec(function(err, hash) {
+      console.log('args log:' ,arguments);
+
+      if(err) defer.reject(err);
+      var obj = {
+        data: data,
+        hashArray: hash.Recipients
+      };
+      if(hash) defer.resolve(obj);
+  });
+  return defer.promise;
 };
-
-
 
 module.exports = mongoose.model('Hashtag', HashtagSchema);
