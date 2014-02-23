@@ -47,6 +47,6 @@ var processImage = function (data) {
   .then(SendLob) // order response
   .then(NotifySender) // logs order to account
   .fail(function(err){
-    console.log('error somewhere: ', error);
+    console.log('error somewhere: ', err);
   });
 };
